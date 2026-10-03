@@ -1,0 +1,12 @@
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasApp.exe
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\appsettings.Development.json
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\appsettings.json
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasAcademicas.postman_collection.json
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasApp.dll
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasApp.deps.json
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasApp.runtimeconfig.json
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\MatriculasApp.pdb
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\Microsoft.OpenApi.dll
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\migue\Documents\Proyectos Electiva\GestiondeMatriculasAcademicas\out\Swashbuckle.AspNetCore.SwaggerUI.dll

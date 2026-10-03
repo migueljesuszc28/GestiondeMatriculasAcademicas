@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Taller Matrículas Académicas - Unisinú",
+    "_postman_id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+    "description": "Colección completa de pruebas para el Taller Práctico de Gestión de Matrículas Académicas (Unisinú) - Electiva Disciplinar IV (Ing. Ricardo Vanegas). Incluye pruebas de reglas de negocio, borrado lógico y códigos de estado HTTP.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5098",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Utilidades",
+      "item": [
+        {
+          "name": "POST Restablecer Base de Datos en Memoria",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reset"]
+            },
+            "description": "Restaura las listas en memoria a su estado inicial para comenzar pruebas limpias."
+          }
+        },
+        {
+          "name": "GET Consultar Estudiantes Disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiantes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estudiantes"]
+            },
+            "description": "Lista los estudiantes registrados en memoria con sus IDs y Carreras."
+          }
+        },
+        {
+          "name": "GET Consultar Todas las Matrículas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Lista todas las inscripciones registradas en el sistema."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Asignaturas (Reglas 1 y 3)",
+      "item": [
+        {
+          "name": "GET /api/asignaturas - Oferta Académica Activa (Regla 3)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas"]
+            },
+            "description": "Retorna ÚNICAMENTE las asignaturas ofertadas que tengan Activa == true (HTTP 200 OK)."
+          }
+        },
+        {
+          "name": "GET /api/asignaturas/todas - Catálogo Completo (Auditoría)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas/todas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas", "todas"]
+            },
+            "description": "Consulta todas las asignaturas (activas e inactivadas) para verificar el estado de Soft Delete."
+          }
+        },
+        {
+          "name": "POST /api/asignaturas - Registrar Nueva Asignatura (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 104,\n  \"nombre\": \"Sistemas Operativos\",\n  \"codigo\": \"SIS-104\",\n  \"creditos\": 3,\n  \"activa\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas"]
+            },
+            "description": "Registra una nueva asignatura académica en el sistema. Retorna HTTP 201 Created."
+          }
+        },
+        {
+          "name": "DELETE /api/asignaturas/104 - Eliminación Física (204 No Content)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas/104",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas", "104"]
+            },
+            "description": "Regla 1: Como la asignatura 104 NO tiene estudiantes matriculados, se elimina físicamente de la lista. Retorna HTTP 204 No Content."
+          }
+        },
+        {
+          "name": "DELETE /api/asignaturas/101 - Borrado Lógico Soft-Delete (200 OK)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas/101",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas", "101"]
+            },
+            "description": "Regla 1: Como la asignatura 101 YA tiene estudiantes matriculados, el sistema no la borra, cambia Activa = false para preservar el historial. Retorna HTTP 200 OK."
+          }
+        },
+        {
+          "name": "DELETE /api/asignaturas/999 - No Encontrada (404 Not Found)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/asignaturas/999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "asignaturas", "999"]
+            },
+            "description": "Intenta eliminar una asignatura que no existe. Retorna HTTP 404 Not Found."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Matrículas (Regla 2)",
+      "item": [
+        {
+          "name": "POST /api/matriculas - Matrícula Exitosa (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 1,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Matricula al Estudiante 1 en la Asignatura 101 para el periodo 2026-1. Retorna HTTP 201 Created."
+          }
+        },
+        {
+          "name": "POST /api/matriculas - Error: Matrícula Duplicada en Periodo (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 1,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Regla 2: Un estudiante NO puede matricular la misma materia 2 veces en el mismo año y periodo lectivo. Retorna HTTP 400 Bad Request."
+          }
+        },
+        {
+          "name": "POST /api/matriculas - Error: Asignatura Inactiva (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 2,\n  \"asignaturaId\": 101,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Regla 2: Si la asignatura se encuentra inactiva (Activa == false), no permite nuevas matrículas. Retorna HTTP 400 Bad Request."
+          }
+        },
+        {
+          "name": "POST /api/matriculas - Error: Estudiante No Existe (404 Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 999,\n  \"asignaturaId\": 102,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Regla 2: Valida la existencia del estudiante en el sistema. Retorna HTTP 404 Not Found."
+          }
+        },
+        {
+          "name": "POST /api/matriculas - Error: Asignatura No Existe (404 Not Found)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estudianteId\": 1,\n  \"asignaturaId\": 999,\n  \"anio\": 2026,\n  \"periodo\": \"2026-1\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/matriculas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "matriculas"]
+            },
+            "description": "Regla 2: Valida la existencia de la asignatura en el sistema. Retorna HTTP 404 Not Found."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Historial Académico",
+      "item": [
+        {
+          "name": "GET /api/estudiantes/1/asignaturas - Historial Académico (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiantes/1/asignaturas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estudiantes", "1", "asignaturas"]
+            },
+            "description": "Consulta el historial de asignaturas matriculadas por el estudiante 1. Demuestra que se preservan las asignaturas incluso si fueron marcadas como inactivas (Soft Delete)."
+          }
+        },
+        {
+          "name": "GET /api/estudiantes/999/asignaturas - Estudiante No Encontrado (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiantes/999/asignaturas",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "estudiantes", "999", "asignaturas"]
+            },
+            "description": "Consulta el historial de un estudiante que no existe. Retorna HTTP 404 Not Found."
+          }
+        }
+      ]
+    }
+  ]
+}

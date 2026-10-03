@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Gestión de Matrículas Académicas - Unisinú</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            unisinu: {
+              red: '#BE1E2D',
+              darkred: '#961521',
+              gold: '#D4AF37',
+              navy: '#0F172A',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .badge-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans flex flex-col">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-red-700 to-red-600 flex items-center justify-center text-white shadow-md shadow-red-200 font-extrabold text-xl tracking-wider">
+          U
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+              Universidad del Sinú
+            </span>
+            <span class="text-xs font-semibold text-slate-500">Escuela de Ingeniería de Sistemas</span>
+          </div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+            Sistema de Gestión de Matrículas Académicas
+          </h1>
+        </div>
+      </div>
+
+      <!-- Actions & Global Controls -->
+      <div class="flex items-center space-x-2.5 self-end md:self-center">
+        <!-- Live Status Pill -->
+        <div class="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium rounded-lg">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>API .NET 10 Online</span>
+        </div>
+
+        <!-- Swagger Link -->
+        <a 
+          href="/swagger" 
+          target="_blank"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition-colors flex items-center space-x-1.5"
+          title="Ver especificación Swagger OpenAPI"
+        >
+          <i class="fa-solid fa-code"></i>
+          <span>Swagger</span>
+        </a>
+
+        <!-- Reset Database Button -->
+        <button 
+          onclick="restablecerDatos()" 
+          class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1.5 transition-all active:scale-95"
+          title="Restablece las listas en memoria a sus valores iniciales"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Restablecer Datos</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- STATS COUNTERS BAR -->
+    <div class="bg-slate-50 border-t border-slate-200/80 px-4 sm:px-6 lg:px-8 py-2">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-2 text-xs text-slate-600">
+        <div class="flex items-center space-x-5">
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>Estudiantes: <strong id="statEstudiantes" class="text-slate-900 font-bold">-</strong></span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>Asignaturas Activas: <strong id="statAsignaturasActivas" class="text-slate-900 font-bold">-</strong></span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>Inactivadas (Soft Delete): <strong id="statAsignaturasInactivas" class="text-slate-900 font-bold">-</strong></span>
+          </div>
+          <div class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span>Matrículas Registradas: <strong id="statMatriculas" class="text-slate-900 font-bold">-</strong></span>
+          </div>
+        </div>
+
+        <div class="text-slate-500 hidden sm:block">
+          Electiva Disciplinar IV | Minimal API C# .NET | Miguel Zuñiga Coneo
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 overflow-x-auto">
+      <button 
+        onclick="cambiarPestana('matriculas')" 
+        id="tab-btn-matriculas"
+        class="tab-btn active px-4 py-3 text-sm font-semibold border-b-2 border-red-600 text-red-700 flex items-center space-x-2 whitespace-nowrap"
+      >
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>Proceso de Matrícula (Regla 2)</span>
+      </button>
+
+      <button 
+        onclick="cambiarPestana('asignaturas')" 
+        id="tab-btn-asignaturas"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap"
+      >
+        <i class="fa-solid fa-book-open"></i>
+        <span>Catálogo & Borrado Lógico (Regla 1 y 3)</span>
+      </button>
+
+      <button 
+        onclick="cambiarPestana('historial')" 
+        id="tab-btn-historial"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap"
+      >
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Historial Académico por Estudiante</span>
+      </button>
+
+      <button 
+        onclick="cambiarPestana('pruebas')" 
+        id="tab-btn-pruebas"
+        class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap"
+      >
+        <i class="fa-solid fa-vial-circle-check"></i>
+        <span>Laboratorio de Reglas de Negocio</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- ============================================================= -->
+    <!-- PESTAÑA 1: PROCESO DE MATRÍCULA -->
+    <!-- ============================================================= -->
+    <section id="pestana-matriculas" class="space-y-6">
+      
+      <!-- Banner explicativo de la Regla 2 -->
+      <div class="bg-gradient-to-r from-red-50 via-slate-50 to-white rounded-2xl p-5 border border-red-100/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="bg-red-600 text-white text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+              Regla de Negocio 2
+            </span>
+            <span class="text-xs font-semibold text-slate-500">POST /api/matriculas</span>
+          </div>
+          <h2 class="text-lg font-bold text-slate-900">Validaciones del Proceso de Matrícula</h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            Verifica la existencia del estudiante, valida que la asignatura esté <strong>Activa</strong> (HTTP 400 si está inactiva) y previene matrículas duplicadas en el mismo año y periodo lectivo.
+          </p>
+        </div>
+
+        <!-- Quick tester buttons -->
+        <div class="flex flex-wrap gap-2">
+          <button 
+            onclick="prepararCasoPrueba('inactiva')" 
+            class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1"
+          >
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Probar Asignatura Inactiva (400)</span>
+          </button>
+
+          <button 
+            onclick="prepararCasoPrueba('duplicada')" 
+            class="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-900 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1"
+          >
+            <i class="fa-solid fa-copy"></i>
+            <span>Probar Duplicado (400)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid con Formulario de Matrícula y Últimas Matrículas -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Formulario (Izquierda) -->
+        <div class="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+              <i class="fa-solid fa-pen-to-square text-red-600"></i>
+              <span>Formulario de Matrícula</span>
+            </h3>
+            <span class="text-xs text-slate-400">Entidad Intermedia N:M</span>
+          </div>
+
+          <form id="formMatricula" onsubmit="ejecutarMatricula(event)" class="space-y-4">
+            
+            <!-- Estudiante -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Estudiante <span class="text-red-500">*</span>
+              </label>
+              <select 
+                id="selectEstudiante" 
+                class="w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition"
+                required
+              >
+                <option value="">Cargando estudiantes...</option>
+              </select>
+            </div>
+
+            <!-- Asignatura -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Asignatura <span class="text-red-500">*</span>
+              </label>
+              <select 
+                id="selectAsignatura" 
+                class="w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition"
+                required
+              >
+                <option value="">Cargando asignaturas...</option>
+              </select>
+              <p class="text-[11px] text-slate-500 mt-1">
+                Las asignaturas marcadas con <span class="text-red-600 font-semibold">[Inactiva]</span> generarán error 400 Bad Request.
+              </p>
+            </div>
+
+            <!-- Año y Periodo -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                  Año Lectivo <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="number" 
+                  id="inputAnio" 
+                  value="2026" 
+                  min="2020" 
+                  max="2035" 
+                  class="w-full text-sm rounded-xl border border-slate-300 px-3 py-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition font-semibold"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">
+                  Periodo <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="inputPeriodo" 
+                  value="2026-1" 
+                  placeholder="Ej: 2026-1"
+                  class="w-full text-sm rounded-xl border border-slate-300 px-3 py-2.5 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition font-semibold"
+                  required
+                />
+              </div>
+            </div>
+
+            <!-- Chips de periodos rápidos -->
+            <div class="flex items-center space-x-2 pt-1">
+              <span class="text-[11px] text-slate-400">Rápido:</span>
+              <button type="button" onclick="setPeriodo('2026-1')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">2026-1</button>
+              <button type="button" onclick="setPeriodo('2026-2')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">2026-2</button>
+              <button type="button" onclick="setPeriodo('2027-1')" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium">2027-1</button>
+            </div>
+
+            <!-- Botón Submit -->
+            <div class="pt-2">
+              <button 
+                type="submit" 
+                id="btnMatricular"
+                class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-xl shadow-md shadow-red-200 transition-all flex items-center justify-center space-x-2"
+              >
+                <i class="fa-solid fa-check"></i>
+                <span>Registrar Matrícula</span>
+              </button>
+            </div>
+
+          </form>
+
+          <!-- Banner de retroalimentación inmediata -->
+          <div id="feedbackMatricula" class="hidden rounded-xl p-4 text-xs transition-all duration-200 border"></div>
+
+        </div>
+
+        <!-- Lista de Matrículas Existentes (Derecha) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div>
+              <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                <i class="fa-solid fa-list-check text-slate-600"></i>
+                <span>Matrículas Registradas en el Sistema</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Control de entidades intermedias vinculando estudiantes con asignaturas.</p>
+            </div>
+            <button 
+              onclick="cargarMatriculas()" 
+              class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition"
+            >
+              <i class="fa-solid fa-arrows-rotate mr-1"></i> Actualizar
+            </button>
+          </div>
+
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                  <th class="py-2.5 px-3">ID</th>
+                  <th class="py-2.5 px-3">Estudiante</th>
+                  <th class="py-2.5 px-3">Asignatura</th>
+                  <th class="py-2.5 px-3">Año / Periodo</th>
+                  <th class="py-2.5 px-3 text-center">Estado Asig.</th>
+                </tr>
+              </thead>
+              <tbody id="tablaMatriculasBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Cargando matrículas...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- PESTAÑA 2: CATÁLOGO Y BORRADO LÓGICO -->
+    <!-- ============================================================= -->
+    <section id="pestana-asignaturas" class="hidden space-y-6">
+
+      <!-- Banner explicativo de la Regla 1 y Regla 3 -->
+      <div class="bg-gradient-to-r from-blue-50 via-slate-50 to-white rounded-2xl p-5 border border-blue-100/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2 mb-1">
+            <span class="bg-blue-600 text-white text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+              Reglas de Negocio 1 & 3
+            </span>
+            <span class="text-xs font-semibold text-slate-500">DELETE /api/asignaturas/{id} & GET /api/asignaturas</span>
+          </div>
+          <h2 class="text-lg font-bold text-slate-900">Oferta Académica & Borrado Lógico (Soft Delete)</h2>
+          <p class="text-sm text-slate-600 mt-0.5">
+            <strong>Regla 1:</strong> Si la asignatura tiene estudiantes matriculados, se aplica borrado lógico (<code class="bg-slate-200/70 px-1 py-0.5 rounded text-blue-900 font-semibold">Activa = false</code>) para preservar el historial. Si NO tiene matrículas, se elimina físicamente (<code class="bg-slate-200/70 px-1 py-0.5 rounded text-slate-800">204 No Content</code>).<br>
+            <strong>Regla 3:</strong> El endpoint <code class="bg-slate-200/70 px-1 py-0.5 rounded text-blue-900 font-semibold">GET /api/asignaturas</code> solo devuelve asignaturas activas.
+          </p>
+        </div>
+
+        <button 
+          onclick="abrirModalNuevaAsignatura()" 
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm flex items-center space-x-2 transition self-start md:self-center active:scale-95"
+        >
+          <i class="fa-solid fa-plus"></i>
+          <span>Nueva Asignatura (POST)</span>
+        </button>
+      </div>
+
+      <!-- Filtro y Tabla de Asignaturas -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div class="flex items-center space-x-3">
+            <h3 class="text-base font-bold text-slate-900">Listado de Asignaturas</h3>
+            <span id="badgeFiltro" class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800">
+              Oferta Disponible
+            </span>
+          </div>
+
+          <!-- Selector de Modo de Consulta -->
+          <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl text-xs font-medium">
+            <button 
+              id="btnFiltroActivas" 
+              onclick="cambiarFiltroAsignaturas('activas')"
+              class="px-3 py-1.5 bg-white text-slate-900 shadow-sm rounded-lg font-semibold transition"
+            >
+              <i class="fa-solid fa-eye mr-1 text-emerald-600"></i> Solo Activas (GET /api/asignaturas)
+            </button>
+            <button 
+              id="btnFiltroTodas" 
+              onclick="cambiarFiltroAsignaturas('todas')"
+              class="px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg transition"
+            >
+              <i class="fa-solid fa-layer-group mr-1 text-blue-600"></i> Todas (Auditoría Soft Delete)
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-4">ID</th>
+                <th class="py-3 px-4">Código</th>
+                <th class="py-3 px-4">Nombre de Asignatura</th>
+                <th class="py-3 px-4 text-center">Créditos</th>
+                <th class="py-3 px-4 text-center">Matrículas Vinculadas</th>
+                <th class="py-3 px-4 text-center">Estado (Activa)</th>
+                <th class="py-3 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaAsignaturasBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-400">
+                  <i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Cargando catálogo de asignaturas...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- PESTAÑA 3: HISTORIAL ACADÉMICO POR ESTUDIANTE -->
+    <!-- ============================================================= -->
+    <section id="pestana-historial" class="hidden space-y-6">
+
+      <div class="bg-gradient-to-r from-purple-50 via-slate-50 to-white rounded-2xl p-5 border border-purple-100/80 shadow-sm">
+        <div class="flex items-center space-x-2 mb-1">
+          <span class="bg-purple-600 text-white text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+            Endpoint Específico
+          </span>
+          <span class="text-xs font-semibold text-slate-500">GET /api/estudiantes/{id}/asignaturas</span>
+        </div>
+        <h2 class="text-lg font-bold text-slate-900">Historial de Asignaturas Matriculadas</h2>
+        <p class="text-sm text-slate-600 mt-0.5">
+          Permite comprobar que el borrado lógico preserva fielmente las materias matriculadas por el estudiante, incluso si la materia ha sido inactivada de la oferta general.
+        </p>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-5">
+        
+        <!-- Selector de Estudiante -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="sm:w-1/2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">
+              Seleccionar Estudiante para Consultar Historial:
+            </label>
+            <select 
+              id="selectEstudianteHistorial" 
+              onchange="consultarHistorialEstudiante(this.value)"
+              class="w-full text-sm rounded-xl border border-slate-300 bg-white px-3 py-2.5 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition"
+            >
+              <option value="">Seleccione un estudiante...</option>
+            </select>
+          </div>
+
+          <div id="cardEstudianteSeleccionado" class="hidden bg-purple-50 border border-purple-200/80 rounded-xl p-3 text-xs sm:w-1/2 flex items-center justify-between">
+            <div>
+              <div class="font-bold text-purple-950 text-sm" id="histNombreEstudiante">-</div>
+              <div class="text-purple-700" id="histCarreraEstudiante">-</div>
+            </div>
+            <div class="text-right">
+              <span class="text-[11px] text-purple-600 font-semibold">Total Asignaturas:</span>
+              <div class="text-base font-extrabold text-purple-900" id="histTotalAsignaturas">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de Historial -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                <th class="py-3 px-4">Matrícula ID</th>
+                <th class="py-3 px-4">Asignatura ID</th>
+                <th class="py-3 px-4">Código</th>
+                <th class="py-3 px-4">Nombre Asignatura</th>
+                <th class="py-3 px-4 text-center">Créditos</th>
+                <th class="py-3 px-4 text-center">Año / Periodo</th>
+                <th class="py-3 px-4 text-center">Estado Catálogo</th>
+              </tr>
+            </thead>
+            <tbody id="tablaHistorialBody" class="divide-y divide-slate-100">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-400">
+                  Selecciona un estudiante para consultar su historial académico.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- PESTAÑA 4: LABORATORIO DE REGLAS DE NEGOCIO -->
+    <!-- ============================================================= -->
+    <section id="pestana-pruebas" class="hidden space-y-6">
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+              <i class="fa-solid fa-vial-circle-check text-indigo-600"></i>
+              <span>Laboratorio de Verificación Automática (Rúbrica)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Ejecuta automáticamente la secuencia completa de pruebas para validar las reglas de negocio, respuestas HTTP y borrado lógico.
+            </p>
+          </div>
+
+          <button 
+            id="btnEjecutarTodasPruebas"
+            onclick="ejecutarSuitePruebas()" 
+            class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-xs rounded-xl shadow-md shadow-indigo-200 flex items-center space-x-2 transition-all"
+          >
+            <i class="fa-solid fa-play"></i>
+            <span>Ejecutar Todas las Pruebas (1 Clic)</span>
+          </button>
+        </div>
+
+        <!-- Barra de Progreso -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between text-xs text-slate-500 font-medium">
+            <span id="suiteProgresoTexto">0 de 6 pruebas completadas</span>
+            <span id="suiteProgresoPorcentaje">0%</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div id="suiteBarraProgreso" class="bg-indigo-600 h-full w-0 transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- Tarjetas de las 6 Pruebas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+          
+          <!-- Test 1: Oferta Inicial -->
+          <div id="test-card-1" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">200 OK</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">1. Consulta de Oferta Inicial (GET)</h4>
+                <p class="text-xs text-slate-500">Verifica que GET /api/asignaturas retorne solo asignaturas activas.</p>
+              </div>
+              <span id="test-status-1" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-1" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+          <!-- Test 2: Matrícula Exitosa -->
+          <div id="test-card-2" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-100 px-2 py-0.5 rounded">201 Created</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">2. Registro de Matrícula Válida (POST)</h4>
+                <p class="text-xs text-slate-500">Registra al estudiante 1 en la asignatura 101 para 2026-1.</p>
+              </div>
+              <span id="test-status-2" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-2" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+          <!-- Test 3: Duplicados -->
+          <div id="test-card-3" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded">400 Bad Request</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">3. Control de Duplicados en Periodo</h4>
+                <p class="text-xs text-slate-500">Rechaza matricular la misma materia en el mismo año y periodo.</p>
+              </div>
+              <span id="test-status-3" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-3" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+          <!-- Test 4: Borrado Lógico -->
+          <div id="test-card-4" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded">Soft Delete (200 OK)</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">4. Borrado Lógico con Matriculados</h4>
+                <p class="text-xs text-slate-500">DELETE a una asignatura con estudiantes no la borra, pone Activa=false.</p>
+              </div>
+              <span id="test-status-4" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-4" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+          <!-- Test 5: Inactiva Bloqueada -->
+          <div id="test-card-5" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-red-700 bg-red-100 px-2 py-0.5 rounded">400 Bad Request</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">5. Rechazo en Asignatura Inactiva</h4>
+                <p class="text-xs text-slate-500">Impide nuevas inscripciones si Activa == false.</p>
+              </div>
+              <span id="test-status-5" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-5" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+          <!-- Test 6: Preservar Historial -->
+          <div id="test-card-6" class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between space-y-2">
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded">Preservación Historial</span>
+                <h4 class="font-bold text-slate-900 text-sm mt-1">6. Historial Académico Preservado</h4>
+                <p class="text-xs text-slate-500">Comprueba que el estudiante aún tiene la asignatura inactiva en su récord.</p>
+              </div>
+              <span id="test-status-6" class="text-xs font-semibold text-slate-400">Pendiente</span>
+            </div>
+            <div id="test-detalles-6" class="text-[11px] text-slate-600 hidden font-mono bg-white p-2 rounded border border-slate-200"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISOR DE CONSOLA / ÚLTIMA RESPUESTA HTTP EN VIVO -->
+    <!-- ============================================================= -->
+    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-md overflow-hidden text-slate-300 text-xs">
+      <div class="bg-slate-800/80 px-4 py-2.5 flex items-center justify-between border-b border-slate-700">
+        <div class="flex items-center space-x-2 font-mono">
+          <i class="fa-solid fa-terminal text-red-400"></i>
+          <span class="font-bold text-slate-200">Consola de Respuestas HTTP en Tiempo Real</span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <span id="httpStatusBadge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-700 text-slate-300">
+            ESPERANDO SOLICITUD
+          </span>
+          <span id="httpMethodBadge" class="font-mono text-slate-400 font-semibold">-</span>
+        </div>
+      </div>
+      <div class="p-4 font-mono space-y-2 max-h-48 overflow-y-auto">
+        <div class="flex items-center space-x-2 text-slate-400">
+          <span class="text-slate-500 font-bold">URI:</span>
+          <span id="httpUriDisplay" class="text-amber-300">/api/asignaturas</span>
+        </div>
+        <div>
+          <span class="text-slate-500 font-bold">Payload / Respuesta JSON:</span>
+          <pre id="httpResponseDisplay" class="text-emerald-400 mt-1 whitespace-pre-wrap leading-relaxed select-all">{"mensaje": "Listo para probar las operaciones de la API."}</pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: REGISTRAR NUEVA ASIGNATURA -->
+  <div id="modalNuevaAsignatura" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-in">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+          <i class="fa-solid fa-plus-circle text-blue-600"></i>
+          <span>Registrar Nueva Asignatura</span>
+        </h3>
+        <button onclick="cerrarModalNuevaAsignatura()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formNuevaAsignatura" onsubmit="guardarNuevaAsignatura(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nombre de la Asignatura *</label>
+          <input 
+            type="text" 
+            id="modalNombreAsignatura" 
+            placeholder="Ej: Inteligencia Artificial" 
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" 
+            required 
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Código *</label>
+            <input 
+              type="text" 
+              id="modalCodigoAsignatura" 
+              placeholder="Ej: SIS-105" 
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm uppercase focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" 
+              required 
+            />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Créditos *</label>
+            <input 
+              type="number" 
+              id="modalCreditosAsignatura" 
+              value="3" 
+              min="1" 
+              max="10" 
+              class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" 
+              required 
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">ID (Opcional, 0 para autogenerar)</label>
+          <input 
+            type="number" 
+            id="modalIdAsignatura" 
+            placeholder="Autogenerado" 
+            class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" 
+          />
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button 
+            type="button" 
+            onclick="cerrarModalNuevaAsignatura()" 
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-sm transition"
+          >
+            Guardar Asignatura
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    Universidad del Sinú &bull; Escuela de Ingeniería de Sistemas &bull; Electiva Disciplinar IV &bull; Minimal API C# .NET 10
+  </footer>
+
+  <!-- ============================================================= -->
+  <!-- JAVASCRIPT DE CONTROL Y COMUNICACIÓN CON LA API -->
+  <!-- ============================================================= -->
+  <script>
+    // Variables de estado local
+    let asignaturasMemoria = [];
+    let estudiantesMemoria = [];
+    let matriculasMemoria = [];
+    let filtroAsignaturasModo = 'activas'; // 'activas' o 'todas'
+
+    // Elementos DOM
+    const statEstudiantes = document.getElementById('statEstudiantes');
+    const statAsignaturasActivas = document.getElementById('statAsignaturasActivas');
+    const statAsignaturasInactivas = document.getElementById('statAsignaturasInactivas');
+    const statMatriculas = document.getElementById('statMatriculas');
+
+    const selectEstudiante = document.getElementById('selectEstudiante');
+    const selectAsignatura = document.getElementById('selectAsignatura');
+    const selectEstudianteHistorial = document.getElementById('selectEstudianteHistorial');
+
+    const httpStatusBadge = document.getElementById('httpStatusBadge');
+    const httpMethodBadge = document.getElementById('httpMethodBadge');
+    const httpUriDisplay = document.getElementById('httpUriDisplay');
+    const httpResponseDisplay = document.getElementById('httpResponseDisplay');
+
+    // Inicialización al cargar página
+    window.addEventListener('DOMContentLoaded', async () => {
+      await actualizarTodo();
+    });
+
+    // Función global para registrar peticiones en la consola interactiva
+    function registrarConsola(metodo, uri, status, bodyData) {
+      httpMethodBadge.textContent = metodo;
+      httpUriDisplay.textContent = uri;
+      httpResponseDisplay.textContent = typeof bodyData === 'string' ? bodyData : JSON.stringify(bodyData, null, 2);
+
+      httpStatusBadge.textContent = status ? `HTTP ${status}` : 'ERROR';
+      httpStatusBadge.className = 'px-2 py-0.5 rounded text-[11px] font-bold ';
+
+      if (status >= 200 && status < 300) {
+        httpStatusBadge.className += 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40';
+      } else if (status >= 400 && status < 500) {
+        httpStatusBadge.className += 'bg-amber-500/20 text-amber-400 border border-amber-500/40';
+      } else {
+        httpStatusBadge.className += 'bg-red-500/20 text-red-400 border border-red-500/40';
+      }
+    }
+
+    // Actualiza todos los datos desde la API
+    async function actualizarTodo() {
+      await Promise.all([
+        cargarEstudiantes(),
+        cargarAsignaturas(),
+        cargarMatriculas()
+      ]);
+      actualizarEstadisticas();
+    }
+
+    // Cargar Estudiantes
+    async function cargarEstudiantes() {
+      try {
+        const res = await fetch('/api/estudiantes');
+        if (res.ok) {
+          estudiantesMemoria = await res.json();
+          renderizarSelectEstudiantes();
+        }
+      } catch (err) {
+        console.error('Error cargando estudiantes:', err);
+      }
+    }
+
+    function renderizarSelectEstudiantes() {
+      selectEstudiante.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
+      selectEstudianteHistorial.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
+
+      estudiantesMemoria.forEach(e => {
+        const opt1 = document.createElement('option');
+        opt1.value = e.id;
+        opt1.textContent = `${e.nombre} (ID: ${e.id}) - ${e.carrera}`;
+        selectEstudiante.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = e.id;
+        opt2.textContent = `${e.nombre} (ID: ${e.id}) - ${e.carrera}`;
+        selectEstudianteHistorial.appendChild(opt2);
+      });
+    }
+
+    // Cargar Asignaturas
+    async function cargarAsignaturas() {
+      try {
+        const url = filtroAsignaturasModo === 'activas' ? '/api/asignaturas' : '/api/asignaturas/todas';
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          asignaturasMemoria = data;
+          renderizarTablaAsignaturas();
+          renderizarSelectAsignaturas();
+        }
+      } catch (err) {
+        console.error('Error cargando asignaturas:', err);
+      }
+    }
+
+    function renderizarSelectAsignaturas() {
+      selectAsignatura.innerHTML = '<option value="">-- Seleccione una asignatura --</option>';
+      asignaturasMemoria.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        const estadoTxt = a.activa ? '' : ' [INACTIVA - Genera Error 400]';
+        opt.textContent = `${a.nombre} (${a.codigo} - ${a.creditos} Cr.)${estadoTxt}`;
+        if (!a.activa) {
+          opt.className = 'text-red-600 font-semibold bg-red-50';
+        }
+        selectAsignatura.appendChild(opt);
+      });
+    }
+
+    function renderizarTablaAsignaturas() {
+      const tbody = document.getElementById('tablaAsignaturasBody');
+      if (!asignaturasMemoria || asignaturasMemoria.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">No hay asignaturas para mostrar.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = asignaturasMemoria.map(a => {
+        const countMatriculas = matriculasMemoria.filter(m => m.asignaturaId === a.id).length;
+        const badgeEstado = a.activa 
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Activa</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-200 text-slate-700"><i class="fa-solid fa-ban mr-1 text-[10px]"></i> Inactiva (Soft Deleted)</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${a.id}</td>
+            <td class="py-2.5 px-4 font-mono text-slate-600 font-semibold">${a.codigo}</td>
+            <td class="py-2.5 px-4 font-medium text-slate-800">${a.nombre}</td>
+            <td class="py-2.5 px-4 text-center font-semibold text-slate-700">${a.creditos}</td>
+            <td class="py-2.5 px-4 text-center">
+              <span class="inline-block px-2 py-0.5 rounded-full text-[11px] font-bold ${countMatriculas > 0 ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-600'}">
+                ${countMatriculas} inscritos
+              </span>
+            </td>
+            <td class="py-2.5 px-4 text-center">${badgeEstado}</td>
+            <td class="py-2.5 px-4 text-center">
+              <button 
+                onclick="solicitarEliminarAsignatura(${a.id}, '${a.nombre}', ${countMatriculas})" 
+                class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold transition active:scale-95 flex items-center space-x-1 mx-auto"
+                title="Elimina físicamente si no tiene inscritos, o aplica borrado lógico si cuenta con estudiantes"
+              >
+                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                <span>Eliminar</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Cargar Matrículas
+    async function cargarMatriculas() {
+      try {
+        const res = await fetch('/api/matriculas');
+        if (res.ok) {
+          matriculasMemoria = await res.json();
+          renderizarTablaMatriculas();
+        }
+      } catch (err) {
+        console.error('Error cargando matriculas:', err);
+      }
+    }
+
+    function renderizarTablaMatriculas() {
+      const tbody = document.getElementById('tablaMatriculasBody');
+      if (!matriculasMemoria || matriculasMemoria.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">No se han registrado matrículas aún.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = matriculasMemoria.map(m => {
+        const est = estudiantesMemoria.find(e => e.id === m.estudianteId);
+        const asig = asignaturasMemoria.find(a => a.id === m.asignaturaId);
+        const nombreEst = est ? est.nombre : `Estudiante #${m.estudianteId}`;
+        const nombreAsig = asig ? asig.nombre : `Asignatura #${m.asignaturaId}`;
+        const estadoAsig = asig && asig.activa 
+          ? `<span class="text-emerald-700 font-semibold">Activa</span>` 
+          : `<span class="text-slate-500 font-semibold">Inactiva (Preservada)</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition-colors">
+            <td class="py-2 px-3 font-mono font-bold text-slate-900">${m.id}</td>
+            <td class="py-2 px-3 font-medium text-slate-800">${nombreEst}</td>
+            <td class="py-2 px-3 text-slate-700">${nombreAsig}</td>
+            <td class="py-2 px-3">
+              <span class="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-mono font-semibold">${m.periodo}</span>
+            </td>
+            <td class="py-2 px-3 text-center text-[11px]">${estadoAsig}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Actualizar Estadísticas del Header
+    function actualizarEstadisticas() {
+      statEstudiantes.textContent = estudiantesMemoria.length;
+      const activas = asignaturasMemoria.filter(a => a.activa).length;
+      const inactivas = asignaturasMemoria.filter(a => !a.activa).length;
+      statAsignaturasActivas.textContent = activas;
+      statAsignaturasInactivas.textContent = inactivas;
+      statMatriculas.textContent = matriculasMemoria.length;
+    }
+
+    // =============================================================
+    // ACCIONES DE FORMULARIO Y ENDPOINTS
+    // =============================================================
+
+    // Ejecutar Matrícula (POST /api/matriculas)
+    async function ejecutarMatricula(event) {
+      event.preventDefault();
+      const fb = document.getElementById('feedbackMatricula');
+      fb.classList.add('hidden');
+
+      const estudianteId = parseInt(selectEstudiante.value);
+      const asignaturaId = parseInt(selectAsignatura.value);
+      const anio = parseInt(document.getElementById('inputAnio').value);
+      const periodo = document.getElementById('inputPeriodo').value.trim();
+
+      const payload = { id: 0, estudianteId, asignaturaId, anio, periodo };
+
+      try {
+        const res = await fetch('/api/matriculas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        registrarConsola('POST', '/api/matriculas', res.status, data);
+
+        fb.classList.remove('hidden');
+        if (res.status === 201) {
+          fb.className = 'rounded-xl p-4 text-xs transition-all duration-200 border bg-emerald-50 border-emerald-200 text-emerald-900';
+          fb.innerHTML = `
+            <div class="flex items-center space-x-2 font-bold mb-1">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+              <span>Matrícula Registrada con Éxito (HTTP 201 Created)</span>
+            </div>
+            <div>Matrícula ID: <strong>${data.id}</strong> | Estudiante: <strong>${data.estudianteId}</strong> | Periodo: <strong>${data.periodo}</strong></div>
+          `;
+          await actualizarTodo();
+        } else {
+          // Errores 400 Bad Request o 404 Not Found
+          fb.className = 'rounded-xl p-4 text-xs transition-all duration-200 border bg-rose-50 border-rose-200 text-rose-900';
+          fb.innerHTML = `
+            <div class="flex items-center space-x-2 font-bold mb-1">
+              <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm"></i>
+              <span>Validación Rechazada (HTTP ${res.status})</span>
+            </div>
+            <div>${data.mensaje || 'Error en la solicitud.'}</div>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        fb.classList.remove('hidden');
+        fb.className = 'rounded-xl p-4 text-xs border bg-red-50 border-red-200 text-red-900';
+        fb.textContent = 'Error de conexión con el servidor.';
+      }
+    }
+
+    // Eliminar o Inactivar Asignatura (DELETE /api/asignaturas/{id})
+    async function solicitarEliminarAsignatura(id, nombre, matriculasVinculadas) {
+      let advertencia = matriculasVinculadas > 0
+        ? `La asignatura '${nombre}' (ID ${id}) cuenta con ${matriculasVinculadas} estudiantes matriculados.\n\nSegún la Regla de Negocio 1, NO se borrará físicamente. Se aplicará BORRADO LÓGICO (Activa = false) para preservar el historial académico.\n\n¿Deseas continuar?`
+        : `La asignatura '${nombre}' (ID ${id}) NO tiene estudiantes matriculados.\n\nSegún la Regla de Negocio 1, se ELIMINARÁ FÍSICAMENTE de la lista (204 No Content).\n\n¿Deseas continuar?`;
+
+      if (!confirm(advertencia)) return;
+
+      try {
+        const res = await fetch(`/api/asignaturas/${id}`, { method: 'DELETE' });
+
+        if (res.status === 204) {
+          registrarConsola('DELETE', `/api/asignaturas/${id}`, 204, { mensaje: `Asignatura ${id} eliminada físicamente (204 No Content)` });
+          alert(`Eliminación física exitosa (HTTP 204 No Content): La asignatura sin matrículas fue removida de la lista.`);
+        } else {
+          const data = await res.json();
+          registrarConsola('DELETE', `/api/asignaturas/${id}`, res.status, data);
+          alert(`Borrado Lógico aplicado (HTTP ${res.status}):\n${data.mensaje}`);
+        }
+
+        await actualizarTodo();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Guardar Nueva Asignatura (POST /api/asignaturas)
+    async function guardarNuevaAsignatura(event) {
+      event.preventDefault();
+      const nombre = document.getElementById('modalNombreAsignatura').value.trim();
+      const codigo = document.getElementById('modalCodigoAsignatura').value.trim().toUpperCase();
+      const creditos = parseInt(document.getElementById('modalCreditosAsignatura').value);
+      const idInput = parseInt(document.getElementById('modalIdAsignatura').value) || 0;
+
+      const payload = { id: idInput, nombre, codigo, creditos, activa: true };
+
+      try {
+        const res = await fetch('/api/asignaturas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        registrarConsola('POST', '/api/asignaturas', res.status, data);
+
+        if (res.status === 201) {
+          cerrarModalNuevaAsignatura();
+          await actualizarTodo();
+          alert(`Asignatura '${data.nombre}' registrada exitosamente con ID ${data.id} (HTTP 201 Created).`);
+        } else {
+          alert(`Error al registrar asignatura (HTTP ${res.status}):\n${data.mensaje}`);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Consultar Historial Académico por Estudiante (GET /api/estudiantes/{id}/asignaturas)
+    async function consultarHistorialEstudiante(id) {
+      const card = document.getElementById('cardEstudianteSeleccionado');
+      const tbody = document.getElementById('tablaHistorialBody');
+
+      if (!id) {
+        card.classList.add('hidden');
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Selecciona un estudiante para consultar su historial académico.</td></tr>`;
+        return;
+      }
+
+      const est = estudiantesMemoria.find(e => e.id == id);
+      if (est) {
+        card.classList.remove('hidden');
+        document.getElementById('histNombreEstudiante').textContent = est.nombre;
+        document.getElementById('histCarreraEstudiante').textContent = est.carrera;
+      }
+
+      try {
+        const res = await fetch(`/api/estudiantes/${id}/asignaturas`);
+        const data = await res.json();
+        registrarConsola('GET', `/api/estudiantes/${id}/asignaturas`, res.status, data);
+
+        document.getElementById('histTotalAsignaturas').textContent = data.length;
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Este estudiante no tiene asignaturas matriculadas actualmente.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.map(item => {
+          const badgeCat = item.activa
+            ? `<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">Activa en Oferta</span>`
+            : `<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-100 text-rose-800" title="Borrado Lógico preservado"><i class="fa-solid fa-lock mr-1"></i> Inactiva (Historial Preservado)</span>`;
+
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="py-2.5 px-4 font-mono font-bold text-slate-900">${item.matriculaId}</td>
+              <td class="py-2.5 px-4 font-mono text-slate-600">${item.asignaturaId}</td>
+              <td class="py-2.5 px-4 font-mono font-semibold text-slate-800">${item.codigoAsignatura}</td>
+              <td class="py-2.5 px-4 font-medium text-slate-900">${item.nombreAsignatura}</td>
+              <td class="py-2.5 px-4 text-center font-semibold text-slate-700">${item.creditos}</td>
+              <td class="py-2.5 px-4 text-center">
+                <span class="bg-purple-100 text-purple-900 font-mono font-bold px-2 py-0.5 rounded text-[11px]">${item.periodo} (${item.anio})</span>
+              </td>
+              <td class="py-2.5 px-4 text-center">${badgeCat}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Restablecer Datos de la Base de Datos en Memoria (POST /api/reset)
+    async function restablecerDatos() {
+      if (!confirm('¿Deseas restablecer todas las colecciones en memoria a sus valores iniciales?')) return;
+
+      try {
+        const res = await fetch('/api/reset', { method: 'POST' });
+        const data = await res.json();
+        registrarConsola('POST', '/api/reset', res.status, data);
+        await actualizarTodo();
+        alert('Colecciones en memoria restablecidas exitosamente a los datos originales del taller.');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // =============================================================
+    // SUITE AUTOMATIZADA DE PRUEBAS DE REGLAS DE NEGOCIO
+    // =============================================================
+    async function ejecutarSuitePruebas() {
+      const btn = document.getElementById('btnEjecutarTodasPruebas');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Ejecutando Pruebas...</span>`;
+
+      // Primero restablecemos la base para tener un entorno limpio
+      await fetch('/api/reset', { method: 'POST' });
+      await actualizarTodo();
+
+      let completadas = 0;
+      const total = 6;
+      const actualizarProgreso = () => {
+        completadas++;
+        const pct = Math.round((completadas / total) * 100);
+        document.getElementById('suiteBarraProgreso').style.width = `${pct}%`;
+        document.getElementById('suiteProgresoTexto').textContent = `${completadas} de ${total} pruebas completadas`;
+        document.getElementById('suiteProgresoPorcentaje').textContent = `${pct}%`;
+      };
+
+      const marcarResultado = (num, exito, detalle) => {
+        const statusEl = document.getElementById(`test-status-${num}`);
+        const detEl = document.getElementById(`test-detalles-${num}`);
+        detEl.classList.remove('hidden');
+        detEl.textContent = detalle;
+
+        if (exito) {
+          statusEl.textContent = 'Pasó ✓';
+          statusEl.className = 'text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
+        } else {
+          statusEl.textContent = 'Falló ✗';
+          statusEl.className = 'text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200';
+        }
+      };
+
+      // PRUEBA 1: Consulta Oferta Inicial
+      try {
+        const res = await fetch('/api/asignaturas');
+        const data = await res.json();
+        const ok = res.status === 200 && data.length === 3 && data.every(a => a.activa);
+        marcarResultado(1, ok, `HTTP ${res.status}: ${data.length} asignaturas activas devueltas.`);
+      } catch (e) {
+        marcarResultado(1, false, e.message);
+      }
+      actualizarProgreso();
+      await new Promise(r => setTimeout(r, 400));
+
+      // PRUEBA 2: Registro de Matrícula Válida
+      try {
+        const res = await fetch('/api/matriculas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: 0, estudianteId: 1, asignaturaId: 101, anio: 2026, periodo: '2026-1' })
+        });
+        const data = await res.json();
+        const ok = res.status === 201 && data.id > 0;
+        marcarResultado(2, ok, `HTTP ${res.status}: Creada matrícula ID ${data.id} para Estudiante 1 en Asignatura 101.`);
+      } catch (e) {
+        marcarResultado(2, false, e.message);
+      }
+      actualizarProgreso();
+      await new Promise(r => setTimeout(r, 400));
+
+      // PRUEBA 3: Control de Duplicados en Periodo
+      try {
+        const res = await fetch('/api/matriculas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: 0, estudianteId: 1, asignaturaId: 101, anio: 2026, periodo: '2026-1' })
+        });
+        const data = await res.json();
+        const ok = res.status === 400;
+        marcarResultado(3, ok, `HTTP ${res.status} Bad Request: Rechazado duplicado: "${data.mensaje}".`);
+      } catch (e) {
+        marcarResultado(3, false, e.message);
+      }
+      actualizarProgreso();
+      await new Promise(r => setTimeout(r, 400));
+
+      // PRUEBA 4: Borrado Lógico con Matriculados
+      try {
+        const res = await fetch('/api/asignaturas/101', { method: 'DELETE' });
+        const data = await res.json();
+        const ok = res.status === 200 && data.asignatura.activa === false;
+        marcarResultado(4, ok, `HTTP ${res.status} OK: Se aplicó borrado lógico (Activa = false).`);
+      } catch (e) {
+        marcarResultado(4, false, e.message);
+      }
+      actualizarProgreso();
+      await new Promise(r => setTimeout(r, 400));
+
+      // PRUEBA 5: Rechazo en Asignatura Inactiva
+      try {
+        const res = await fetch('/api/matriculas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: 0, estudianteId: 2, asignaturaId: 101, anio: 2026, periodo: '2026-1' })
+        });
+        const data = await res.json();
+        const ok = res.status === 400;
+        marcarResultado(5, ok, `HTTP ${res.status} Bad Request: Rechazó inscripción: "${data.mensaje}".`);
+      } catch (e) {
+        marcarResultado(5, false, e.message);
+      }
+      actualizarProgreso();
+      await new Promise(r => setTimeout(r, 400));
+
+      // PRUEBA 6: Preservación Historial Académico
+      try {
+        const res = await fetch('/api/estudiantes/1/asignaturas');
+        const data = await res.json();
+        const tiene101 = data.some(item => item.asignaturaId === 101 && item.activa === false);
+        const ok = res.status === 200 && tiene101;
+        marcarResultado(6, ok, `HTTP ${res.status} OK: El estudiante 1 conserva la asignatura 101 en su historial (Activa=false).`);
+      } catch (e) {
+        marcarResultado(6, false, e.message);
+      }
+      actualizarProgreso();
+
+      await actualizarTodo();
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Ejecutar Todas las Pruebas (1 Clic)</span>`;
+    }
+
+    // =============================================================
+    // HELPERS Y NAVEGACIÓN DE PESTAÑAS
+    // =============================================================
+    function cambiarPestana(id) {
+      ['matriculas', 'asignaturas', 'historial', 'pruebas'].forEach(tab => {
+        document.getElementById(`pestana-${tab}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${tab}`);
+        btn.classList.remove('border-red-600', 'text-red-700');
+        btn.classList.add('border-transparent', 'text-slate-600');
+      });
+
+      document.getElementById(`pestana-${id}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-btn-${id}`);
+      activeBtn.classList.remove('border-transparent', 'text-slate-600');
+      activeBtn.classList.add('border-red-600', 'text-red-700');
+
+      if (id === 'historial') {
+        const selectedId = selectEstudianteHistorial.value;
+        if (selectedId) consultarHistorialEstudiante(selectedId);
+      }
+    }
+
+    function cambiarFiltroAsignaturas(modo) {
+      filtroAsignaturasModo = modo;
+      const btnActivas = document.getElementById('btnFiltroActivas');
+      const btnTodas = document.getElementById('btnFiltroTodas');
+      const badge = document.getElementById('badgeFiltro');
+
+      if (modo === 'activas') {
+        btnActivas.className = 'px-3 py-1.5 bg-white text-slate-900 shadow-sm rounded-lg font-semibold transition';
+        btnTodas.className = 'px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg transition';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800';
+        badge.textContent = 'Oferta Disponible (Activa == true)';
+      } else {
+        btnTodas.className = 'px-3 py-1.5 bg-white text-slate-900 shadow-sm rounded-lg font-semibold transition';
+        btnActivas.className = 'px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg transition';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full font-semibold bg-blue-100 text-blue-800';
+        badge.textContent = 'Catálogo Completo (Activas + Inactivas)';
+      }
+
+      cargarAsignaturas();
+    }
+
+    function setPeriodo(val) {
+      document.getElementById('inputPeriodo').value = val;
+    }
+
+    function prepararCasoPrueba(tipo) {
+      cambiarPestana('matriculas');
+      if (tipo === 'inactiva') {
+        // Seleccionamos un estudiante y buscamos si hay alguna inactiva
+        selectEstudiante.value = "1";
+        const inactiva = asignaturasMemoria.find(a => !a.activa);
+        if (inactiva) {
+          selectAsignatura.value = inactiva.id;
+        } else {
+          alert("Primero inactiva una asignatura desde la pestaña de Catálogo (o ejecuta el laboratorio) para probar este caso.");
+        }
+      } else if (tipo === 'duplicada') {
+        // Si hay alguna matrícula existente, colocamos exactamente los mismos datos
+        if (matriculasMemoria.length > 0) {
+          const m = matriculasMemoria[0];
+          selectEstudiante.value = m.estudianteId;
+          selectAsignatura.value = m.asignaturaId;
+          document.getElementById('inputAnio').value = m.anio;
+          document.getElementById('inputPeriodo').value = m.periodo;
+        } else {
+          selectEstudiante.value = "1";
+          selectAsignatura.value = "101";
+          document.getElementById('inputAnio').value = "2026";
+          document.getElementById('inputPeriodo').value = "2026-1";
+          alert("Asegúrate de registrar primero una matrícula y luego repetir para ver el error 400 por duplicado.");
+        }
+      }
+    }
+
+    function abrirModalNuevaAsignatura() {
+      document.getElementById('modalNuevaAsignatura').classList.remove('hidden');
+    }
+
+    function cerrarModalNuevaAsignatura() {
+      document.getElementById('modalNuevaAsignatura').classList.add('hidden');
+      document.getElementById('formNuevaAsignatura').reset();
+    }
+  </script>
+</body>
+</html>
